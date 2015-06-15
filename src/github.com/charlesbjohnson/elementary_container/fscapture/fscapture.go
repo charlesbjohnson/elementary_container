@@ -9,6 +9,11 @@ type Capturable interface {
 	Path() string
 }
 
+// TODO
+// expand the return value to signify whether to
+//   do nothing
+//   ignore only this file
+//   ignore all files in the same directory
 type FileCaptureHook func(path string, info os.FileInfo) bool
 
 type FileCaptureEvent struct {
