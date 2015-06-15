@@ -3,7 +3,7 @@ package main
 import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/charlesbjohnson/elementary_container/fscapture"
-	"github.com/charlesbjohnson/elementary_container/fscapture/image"
+	"github.com/charlesbjohnson/elementary_container/fscapture/compress"
 	"os"
 	"runtime"
 	"strings"
@@ -26,7 +26,7 @@ var ExcludePaths = []string{
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	image := image.New(RootDirectory)
+	image := compress.New(RootDirectory)
 
 	if err := createImage(image); err != nil {
 		log.Fatal(err)
