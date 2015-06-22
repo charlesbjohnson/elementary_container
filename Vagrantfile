@@ -24,6 +24,8 @@ Vagrant.configure(2) do |config|
     builder.vm.synced_folder '.', '/vagrant', disabled: true
     builder.vm.synced_folder '.', vagrant_go_project_path.to_s
 
+    builder.vm.network 'forwarded_port', guest: ENV['APP_PORT'], host: 9001
+
     builder.vm.provision :shell, inline: GoSetup.dependencies
     builder.vm.provision :shell, inline: GoSetup.install
 
@@ -36,6 +38,8 @@ Vagrant.configure(2) do |config|
 
     target.vm.synced_folder '.', '/vagrant', disabled: true
     target.vm.synced_folder './bin', '/home/vagrant/bin'
+
+    target.vm.network 'forwarded_port', guest: ENV['APP_PORT'], host: 9002
   end
 end
 

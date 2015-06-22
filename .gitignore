@@ -1,6 +1,7 @@
 ## Project ###
 bin/
 pkg/
+.env
 
 
 ### Go ###
