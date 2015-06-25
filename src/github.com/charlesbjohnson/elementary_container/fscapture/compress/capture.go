@@ -6,33 +6,21 @@ import (
 	"os"
 )
 
-func (image *Image) create(extension string) error {
-	finalPath := image.Image.Path() + extension
-
-	if _, err := os.Stat(finalPath); err == nil {
-		return os.ErrExist
-	}
-
-	file, err := os.Create(finalPath)
+func (image *Image) create() error {
+	file, err := os.Create(image.targetPath)
 	if err != nil {
 		return err
 	}
 
-	image.targetPath = finalPath
 	image.targetFile = file
 
 	return nil
 }
 
 func (image *Image) pack() error {
-	file, err := os.Open(image.Image.Path())
-	if err != nil {
-		return err
-	}
-
 	writer := gzip.NewWriter(image.targetFile)
 
-	if _, err := io.Copy(writer, file); err != nil {
+	if _, err := io.Copy(writer, image.Image.File()); err != nil {
 		return err
 	}
 
@@ -44,7 +32,7 @@ func (image *Image) pack() error {
 }
 
 func (image *Image) finalize() error {
-	if err := image.targetFile.Close(); err != nil {
+	if err := image.Image.File().Close(); err != nil {
 		return err
 	}
 

@@ -1,9 +1,12 @@
 package compress
 
 import (
-	"github.com/charlesbjohnson/elementary_container/fscapture/image"
 	"os"
+
+	"github.com/charlesbjohnson/elementary_container/fscapture/image"
 )
+
+const extension = ".gz"
 
 type Image struct {
 	*image.Image
@@ -11,16 +14,36 @@ type Image struct {
 	targetFile *os.File
 }
 
-func New(inputPath string) *Image {
-	return &Image{Image: image.New(inputPath)}
+func New(inputPath, outputPath string) *Image {
+	image := image.New(inputPath, outputPath)
+
+	return &Image{
+		Image:      image,
+		targetPath: image.Path() + extension,
+	}
 }
 
-func (image *Image) Capture(outputPath string) error {
-	if err := image.Image.Capture(outputPath); err != nil {
+func (image *Image) Exists() bool {
+	result := true
+
+	if _, err := os.Stat(image.targetPath); err != nil {
+		result = false
+	}
+
+	return result
+}
+
+func (image *Image) Capture() error {
+	if image.Exists() {
+		image.Image.Close()
+		return os.ErrExist
+	}
+
+	if err := image.Image.Capture(); err != nil {
 		return err
 	}
 
-	if err := image.create(".gz"); err != nil {
+	if err := image.create(); err != nil {
 		return err
 	}
 
@@ -37,4 +60,22 @@ func (image *Image) Capture(outputPath string) error {
 
 func (image *Image) Path() string {
 	return image.targetPath
+}
+
+func (image *Image) File() *os.File {
+	return image.targetFile
+}
+
+func (image *Image) Close() error {
+	if err := image.Image.Close(); err != nil {
+		return err
+	}
+
+	if image.targetFile != nil {
+		if err := image.targetFile.Close(); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
