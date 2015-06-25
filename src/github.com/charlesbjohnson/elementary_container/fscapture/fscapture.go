@@ -3,10 +3,12 @@ package fscapture
 import "os"
 
 type Capturable interface {
-	Capture(string) error
+	Capture() error
 	RegisterFileCaptureHook(string, FileCaptureHook) Capturable
 	FileCaptureEvents() <-chan FileCaptureEvent
 	Path() string
+	File() *os.File
+	Close() error
 }
 
 // TODO

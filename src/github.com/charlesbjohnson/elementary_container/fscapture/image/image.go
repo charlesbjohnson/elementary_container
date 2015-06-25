@@ -2,10 +2,13 @@ package image
 
 import (
 	"archive/tar"
-	"github.com/charlesbjohnson/elementary_container/fscapture"
 	"os"
 	"sync"
+
+	"github.com/charlesbjohnson/elementary_container/fscapture"
 )
+
+const extension = ".tar"
 
 type fileCaptureHookRegistration struct {
 	Id   string
@@ -13,19 +16,20 @@ type fileCaptureHookRegistration struct {
 }
 
 type Image struct {
-	inputPath         string
-	outputPath        string
-	targetPath        string
-	targetFile        *os.File
-	writer            *tar.Writer
-	handlers          []fileCaptureHookRegistration
-	fileCaptureEvents chan fscapture.FileCaptureEvent
-	wait              sync.WaitGroup
+	inputPath               string
+	targetPath              string
+	targetFile              *os.File
+	writer                  *tar.Writer
+	handlers                []fileCaptureHookRegistration
+	fileCaptureEvents       chan fscapture.FileCaptureEvent
+	wait                    sync.WaitGroup
+	fileCaptureEventsClosed bool
 }
 
-func New(inputPath string) *Image {
+func New(inputPath, outputPath string) *Image {
 	return &Image{
 		inputPath:         inputPath,
+		targetPath:        outputPath + extension,
 		fileCaptureEvents: make(chan fscapture.FileCaptureEvent),
 	}
 }
@@ -39,15 +43,24 @@ func (image *Image) FileCaptureEvents() <-chan fscapture.FileCaptureEvent {
 	return image.fileCaptureEvents
 }
 
-func (image *Image) Capture(outputPath string) error {
-	defer func() {
-		image.wait.Wait()
-		close(image.fileCaptureEvents)
-	}()
+func (image *Image) Exists() bool {
+	result := true
 
-	image.outputPath = outputPath
+	if _, err := os.Stat(image.targetPath); err != nil {
+		result = false
+	}
 
-	if err := image.create(".tar"); err != nil {
+	return result
+}
+
+func (image *Image) Capture() error {
+	defer image.endEmit()
+
+	if image.Exists() {
+		return os.ErrExist
+	}
+
+	if err := image.create(); err != nil {
 		return err
 	}
 
@@ -64,4 +77,20 @@ func (image *Image) Capture(outputPath string) error {
 
 func (image *Image) Path() string {
 	return image.targetPath
+}
+
+func (image *Image) File() *os.File {
+	return image.targetFile
+}
+
+func (image *Image) Close() error {
+	if image.targetFile != nil {
+		if err := image.targetFile.Close(); err != nil {
+			return err
+		}
+	}
+
+	image.endEmit()
+
+	return nil
 }
