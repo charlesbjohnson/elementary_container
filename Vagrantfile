@@ -16,21 +16,21 @@ Vagrant.configure(2) do |config|
   config.vm.define 'builder' do |builder|
     builder.vm.box = 'phusion/ubuntu-14.04-amd64'
 
-    go_path = Pathname.new(ENV['GOPATH'])
+    go_path, vagrant_go_path = Pathname.new(ENV['GOPATH']), Pathname.new('/home/vagrant/go')
     go_project_path = Pathname.pwd
-    vagrant_go_path = Pathname.new('/home/vagrant/go')
     vagrant_go_project_path = vagrant_go_path.join(go_project_path.relative_path_from(go_path))
 
     builder.vm.synced_folder '.', '/vagrant', disabled: true
-    builder.vm.synced_folder '.', vagrant_go_project_path.to_s
+    builder.vm.synced_folder '.', vagrant_go_project_path.to_s, owner: 'vagrant', group: 'vagrant'
 
-    builder.vm.network 'forwarded_port', guest: ENV['APP_PORT'], host: 9001
+    host, _ = ENV['SERVER_URL_HOST'].split(':')
+    builder.vm.network 'private_network', ip: host
 
     builder.vm.provision :shell, inline: GoSetup.dependencies
     builder.vm.provision :shell, inline: GoSetup.install
 
     builder.vm.provision :shell, privileged: false, inline: GoSetup.environment
-    builder.vm.provision :shell, privileged: false, inline: ProjectSetup.dependencies
+    builder.vm.provision :shell, privileged: false, inline: GoProjectSetup.dependencies
   end
 
   config.vm.define 'target' do |target|
@@ -39,7 +39,7 @@ Vagrant.configure(2) do |config|
     target.vm.synced_folder '.', '/vagrant', disabled: true
     target.vm.synced_folder './bin', '/home/vagrant/bin'
 
-    target.vm.network 'forwarded_port', guest: ENV['APP_PORT'], host: 9002
+    target.vm.network 'private_network', ip: '192.168.50.4'
   end
 end
 
@@ -57,7 +57,7 @@ module GoSetup
     <<-SCRIPT.strip_heredoc
       if [[ ! -d /usr/local/go ]]; then
         mkdir --parents /tmp
-        curl --silent --location --output /tmp/go.tar.gz https://storage.googleapis.com/golang/go1.4.2.linux-amd64.tar.gz
+        curl --silent --location --output /tmp/go.tar.gz https://storage.googleapis.com/golang/go1.5.1.linux-amd64.tar.gz
         tar --extract --gunzip --file /tmp/go.tar.gz --directory /usr/local
         chown --recursive vagrant /usr/local/go
         rm /tmp/go.tar.gz
@@ -71,6 +71,7 @@ module GoSetup
       GOPATH=~/go
 
       mkdir --parents $GOPATH
+      sudo chown --recursive vagrant $GOPATH
 
       cat << EOF > ~/.profile.go
       export GOROOT=$GOROOT
@@ -87,7 +88,7 @@ module GoSetup
   end
 end
 
-module ProjectSetup
+module GoProjectSetup
   extend self
 
   def dependencies
