@@ -5,6 +5,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/charlesbjohnson/elementary_container/headmaster"
+	"github.com/charlesbjohnson/elementary_container/headmaster/images"
 	"github.com/joho/godotenv"
 )
 
@@ -21,5 +22,6 @@ func Run() {
 		logger.Fatal(err)
 	}
 
+	images.Register(server)
 	server.Run()
 }
