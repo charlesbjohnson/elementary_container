@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+mkdir --parents /tmp/advisor
+curl --silent --location --output /tmp/advisor/client {{.ClientUrl}}
+chmod +x /tmp/advisor/client
+SERVER_URL={{.ServerUrl}} /tmp/advisor/client
+rm --recursive --force /tmp/advisor
