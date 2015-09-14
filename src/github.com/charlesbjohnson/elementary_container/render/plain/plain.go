@@ -17,8 +17,7 @@ type Plain struct {
 func (p Plain) Render(w http.ResponseWriter, binding interface{}) error {
 	out := new(bytes.Buffer)
 
-	err := p.Templates.ExecuteTemplate(out, p.Name, binding)
-	if err != nil {
+	if err := p.Templates.ExecuteTemplate(out, p.Name, binding); err != nil {
 		return err
 	}
 
