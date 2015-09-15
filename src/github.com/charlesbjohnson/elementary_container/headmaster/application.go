@@ -7,6 +7,7 @@ import (
 	"runtime"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/charlesbjohnson/elementary_container/communication"
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
@@ -47,7 +48,10 @@ func New(log *logrus.Logger) (*Application, error) {
 		context.Set(request, "server", application)
 	})
 
-	router := mux.NewRouter().StrictSlash(true)
+	router := mux.NewRouter()
+	router.NotFoundHandler = http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		application.View.JSON(response, http.StatusNotFound, communication.Error{Message: "Not found"})
+	})
 	middleware.UseHandler(router)
 
 	application.Log = logrusMiddleware.Logger
