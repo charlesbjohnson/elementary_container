@@ -19,6 +19,7 @@ type Application struct {
 	Middleware *negroni.Negroni
 	Router     *mux.Router
 	View       *View
+	Polling    map[string]chan string
 }
 
 type Server interface {
@@ -58,6 +59,7 @@ func New(log *logrus.Logger) (*Application, error) {
 	application.Middleware = middleware
 	application.Router = router
 	application.View = view
+	application.Polling = make(map[string]chan string)
 
 	return application, nil
 }

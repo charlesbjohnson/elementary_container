@@ -2,6 +2,7 @@
 bin/
 pkg/
 .env
+vendor/src
 
 
 ### Go ###
@@ -37,3 +38,8 @@ _testmain.go
 
 ### Vagrant ###
 .vagrant/
+
+
+### Terraform ###
+terraform.tfvars
+terraform.tfstate*

@@ -10,4 +10,8 @@ func Register(server headmaster.Server) {
 	router := application.Router.PathPrefix("/images").Subrouter()
 
 	router.Path("/").Methods("GET").HandlerFunc(startHandler)
+	router.Path("/").Methods("POST").HandlerFunc(createHandler)
+	router.Path("/commit/").Methods("POST").HandlerFunc(commitHandler)
+	router.Path("/add/").Methods("GET").HandlerFunc(addHandler)
+	router.Path("/poll/").Methods("GET").HandlerFunc(pollHandler)
 }

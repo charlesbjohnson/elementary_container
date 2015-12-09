@@ -1,0 +1,32 @@
+TODO
+  need build process in which client gets deployed
+
+server
+  http basic auth protected route
+    on auth success starts a transaction with a ttl and an id
+    renders form with instructions for running a shell script
+    shell script is rendered based on the transaction id
+      shell script downloads the binary
+      shell script runs the binary with the id and some other vars (ip address)
+
+client
+  packs up the image
+  gets a checksum of the image
+  pings server
+  if checksum is not recognized
+    gets s3 bucket to place in from server
+    uploads to s3 bucket
+    pings server with transaction id when done
+  waits for s3 identifier
+
+server
+  imports the image into docker naming it after identifier
+  starts container
+  runs scripts
+  saves image
+  puts new image into s3
+  tells client about image in s3
+
+client
+  pulls down s3 image
+  ???
